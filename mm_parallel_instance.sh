@@ -2,15 +2,19 @@
 set -ex
 
 mkdir -p ./executables/
-g++ ./mm_inplace.cpp -o ./executables/cache_adaptive_balloon
-chmod a+x ./executables/cache_adaptive_balloon
-g++ ./mm_scan.cpp -o ./executables/non_cache_adaptive_balloon
-chmod a+x ./executables/non_cache_adaptive_balloon
+
+g++ ./mm_inplace.cpp -o ./executables/mm_inplace
+chmod a+x ./executables/mm_inplace
+
+g++ ./mm_scan.cpp -o ./executables/mm_scan
+chmod a+x ./executables/mm_scan
+
+g++ ./mm_block.cpp -o ./executables/mm_block
+chmod a+x ./executables/mm_block
+
 g++ ./make-mm-data.cpp -o ./executables/make-mm-data
 chmod a+x ./executables/make-mm-data
 
-g++ ./balloon.cpp -o ./executables/balloon
-chmod a+x ./executables/balloon
 
 NUMRUNS=3
 NUMINSTANCE=6
@@ -51,6 +55,108 @@ do
 		STARTINGMEMORY_MB=${startingmemory[$index]}
 		TOTALMEMORY=$((STARTINGMEMORY_MB*1024*1024))
 
+
+		#code for constant memory profile merge sort
+		echo "Running 1 instance on M memory"
+		./cgroup_creation.sh cache-test-arghya
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes1
+		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
+		echo $TOTALMEMORY > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
+		echo "Running MM-BLOCK 1 instance" >> out-mm.txt
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1
+		sleep 5
+		wait
+		
+
+		#code for competition memory profile merge sort with m memory of same size
+		echo "Running 2 instances on M memory"
+		./cgroup_creation.sh cache-test-arghya
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes1
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes2
+		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
+		echo $((2*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
+		echo "Running MM-BLOCK 2 instances" >> out-mm.txt
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2
+		sleep 5
+		wait
+		
+		#code for competition memory profile merge sort with m memory of same size
+		echo "Running 3 instances on M memory"
+		./cgroup_creation.sh cache-test-arghya
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes1
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes2
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes3
+		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
+		echo $((3*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
+		echo "Running MM-BLOCK 3 instances" >> out-mm.txt
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3
+		sleep 5
+		wait
+		
+		#code for competition memory profile merge sort with m memory of same size
+		echo "Running 4 instances on M memory"
+		./cgroup_creation.sh cache-test-arghya
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes1
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes2
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes3
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes4
+		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
+		echo $((4*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
+		echo "Running MM-BLOCK 4 instances" >> out-mm.txt
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4
+		sleep 5
+		wait
+
+
+		#code for competition memory profile merge sort with m memory of same size
+		echo "Running 5 instances on M memory"
+		./cgroup_creation.sh cache-test-arghya
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes1
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes2
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes3
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes4
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes5
+		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
+		echo $((5*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
+		echo "Running MM-BLOCK 5 instances" >> out-mm.txt
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes5
+		sleep 5
+		wait
+
+
+		#code for competition memory profile merge sort with m memory of same size
+		echo "Running 6 instances on M memory"
+		./cgroup_creation.sh cache-test-arghya
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes1
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes2
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes3
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes4
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes5
+		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes6
+		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
+		echo $((6*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
+		echo "Running MM-BLOCK 6 instances" >> out-mm.txt
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes5 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_block 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes6
+		sleep 5
+		wait
+
+
+
 		#code for constant memory profile merge sort
 		echo "Running 1 instance on M memory"
 		./cgroup_creation.sh cache-test-arghya
@@ -58,7 +164,7 @@ do
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
 		echo $TOTALMEMORY > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-INPLACE 1 instance" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1
 		sleep 5
 		wait
 		
@@ -71,8 +177,8 @@ do
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
 		echo $((2*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-INPLACE 2 instances" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2
 		sleep 5
 		wait
 		
@@ -85,9 +191,9 @@ do
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
 		echo $((3*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-INPLACE 3 instances" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3
 		sleep 5
 		wait
 		
@@ -101,10 +207,10 @@ do
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
 		echo $((4*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-INPLACE 4 instances" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4
 		sleep 5
 		wait
 
@@ -118,13 +224,13 @@ do
 		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes4
 		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes5
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
-		echo $((4*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
+		echo $((5*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-INPLACE 5 instances" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes5
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes5
 		sleep 5
 		wait
 
@@ -139,14 +245,14 @@ do
 		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes5
 		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes6
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
-		echo $((4*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
+		echo $((6*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-INPLACE 6 instances" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes5 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes6
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes5 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_inplace 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes6
 		sleep 5
 		wait
 
@@ -159,7 +265,7 @@ do
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
 		echo $TOTALMEMORY > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-SCAN 1 instance" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/non_cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1
 		sleep 5
 		wait
 		
@@ -171,8 +277,8 @@ do
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
 		echo $((2*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-SCAN 2 instances" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/non_cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
-		cgexec -g memory:cache-test-arghya ./executables/non_cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2
 		sleep 5
 		wait
 		
@@ -185,9 +291,9 @@ do
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
 		echo $((3*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-SCAN 3 instances" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/non_cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
-		cgexec -g memory:cache-test-arghya ./executables/non_cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
-		cgexec -g memory:cache-test-arghya ./executables/non_cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3
 		sleep 5
 		wait
 		
@@ -201,10 +307,10 @@ do
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
 		echo $((4*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-SCAN 4 instances" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/non_cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
-		cgexec -g memory:cache-test-arghya ./executables/non_cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
-		cgexec -g memory:cache-test-arghya ./executables/non_cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
-		cgexec -g memory:cache-test-arghya ./executables/non_cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4
 		sleep 5
 
 
@@ -217,13 +323,13 @@ do
 		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes4
 		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes5
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
-		echo $((4*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
+		echo $((5*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-SCAN 5 instances" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes5
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes5
 		sleep 5
 		wait
 
@@ -238,14 +344,14 @@ do
 		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes5
 		./executables/make-mm-data $MATRIXWIDTH data_files/nullbytes6
 		sudo sh -c "sync; echo 3 > /proc/sys/vm/drop_caches; echo 0 > /proc/sys/vm/vfs_cache_pressure"
-		echo $((4*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
+		echo $((6*TOTALMEMORY)) > /sys/fs/cgroup/memory/cache-test-arghya/memory.limit_in_bytes
 		echo "Running MM-SCAN 6 instances" >> out-mm.txt
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes5 &
-		cgexec -g memory:cache-test-arghya ./executables/cache_adaptive_balloon 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes6
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes1 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes2 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes3 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes4 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes5 &
+		cgexec -g memory:cache-test-arghya ./executables/mm_scan 0 $MATRIXWIDTH $STARTINGMEMORY_MB data_files/nullbytes6
 		sleep 5
 		wait
 	done

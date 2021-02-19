@@ -15,6 +15,7 @@ using namespace std;
 unsigned long length = 0;
 const int progress_depth = 4;
 char* datafile;
+int pause_time;
 
 //x is the output, u and v are the two inputs
 void mm( TYPE* x, TYPE* u, TYPE* v, int n )
@@ -63,6 +64,13 @@ void mm( TYPE* x, TYPE* u, TYPE* v, int n )
 		mm( x + m21, u + m21, v + m11, nn );
 		mm( x + m22, u + m21, v + m12, nn );
 
+		if (pause_time == 1) {
+			cout.flush();
+			sleep(10);
+			pause_time = 0;
+		}
+		
+
 		mm( x + m11, u + m12, v + m21, nn );
 		mm( x + m12, u + m12, v + m22, nn );
 		mm( x + m21, u + m22, v + m21, nn );
@@ -77,7 +85,7 @@ int main(int argc, char *argv[]){
 	exit(1);
 	}
 	std::ofstream mm_out = std::ofstream("out-mm.txt",std::ofstream::out | std::ofstream::app);
-	length = std::stol(argv[2]);
+	pause_time = std::stol(argv[1]); length = std::stol(argv[2]);
 	std::cout << "Running cache_adaptive matrix multiply with matrices of size: " << (int)length << "x" << (int)length << "\n";
 	std::vector<long> io_stats = {0,0};
 	CacheHelper::print_io_data(io_stats, "Printing I/O statistics at program start @@@@@ \n");
@@ -110,6 +118,10 @@ int main(int argc, char *argv[]){
 	std::chrono::system_clock::time_point t_start = std::chrono::system_clock::now();
 	std::clock_t start = std::clock();
 	mm(dst,dst+length*length,dst+length*length*2,length);
+	if (pause_time == 0) {
+		cout.flush();
+		sleep(10);
+	}
 	std::chrono::system_clock::time_point t_end = std::chrono::system_clock::now();
 	double cpu_time = ( std::clock() - start ) / (double) CLOCKS_PER_SEC;
 	auto wall_time = std::chrono::duration<double, std::milli>(t_end-t_start).count();
@@ -124,21 +136,8 @@ int main(int argc, char *argv[]){
 	std::cout << "===========================================\n";
 	CacheHelper::print_io_data(io_stats, "Printing I/O statistics AFTER matrix multiplication @@@@@ \n");
 
-	std::string memory_profile = "";
-	switch(std::stoi(argv[1])) {
-		case 0: //constant memory
-			memory_profile = " CONSTANT memory";
-			break;
-		case 1: //worst case memory
-			memory_profile = " WORST-CASE memory";
-			break;
-		case 2:
-			memory_profile = " PERIODIC memory";
-			break;
-		default:
-			break;
-	}
-	mm_out << "Cache-adaptive " << memory_profile << "," << argv[3] << "," << length << "," << wall_time << "," << (float)io_stats[0]/1000000.0 << "," << (float)io_stats[1]/1000000.0 << "," << (float)(io_stats[0] + io_stats[1])/1000000.0 << std::endl;
+	
+	mm_out << "MM_INPLACE," << argv[3] << "," << length << "," << wall_time << "," << (float)io_stats[0]/1000000.0 << "," << (float)io_stats[1]/1000000.0 << "," << (float)(io_stats[0] + io_stats[1])/1000000.0 << std::endl;
 	/*std::cout << "Result array\n";
 	for (unsigned int i = 0 ; i < length*length; i++){
 	std::cout << dst[i] << " ";

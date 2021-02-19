@@ -8,8 +8,8 @@
 
 
 namespace CacheHelper{
-  //int MM_BASE_SIZE = 1024; //for block_mm in 16 MiB 
   int MM_BASE_SIZE = 128;
+  int MM_BLOCK_BASE_SIZE = 1024; //for mm_block in 16 MiB 
   std::string exec(std::string cmd) {
       std::array<char, 128> buffer;
       std::string result;
